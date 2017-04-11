@@ -145,7 +145,11 @@ class deviceShadow:
                             self._lastVersionInSync = -1  # The version will always be synced for the next incoming delta/GU-accepted response
                     # Cancel the timer and clear the token
                     self._tokenPool[currentToken].cancel()
-                    del self._tokenPool[currentToken]
+                    try:
+                        del self._tokenPool[currentToken]
+                    except KeyError:
+                            self._logger.info("Token: " + str(srcToken) + " Not Found")
+                            return
                     # Need to unsubscribe?
                     self._shadowSubscribeStatusTable[currentAction] -= 1
                     if not self._isPersistentSubscribe and self._shadowSubscribeStatusTable.get(currentAction) <= 0:
@@ -191,7 +195,11 @@ class deviceShadow:
     def _timerHandler(self, srcActionName, srcToken):
         self._dataStructureLock.acquire()
         # Remove the token
-        del self._tokenPool[srcToken]
+        try:
+            del self._tokenPool[srcToken]
+        except KeyError:
+                self._logger.info("Shadow request with token: " + str(srcToken) + " not found")
+                return
         # Need to unsubscribe?
         self._shadowSubscribeStatusTable[srcActionName] -= 1
         if not self._isPersistentSubscribe and self._shadowSubscribeStatusTable.get(srcActionName) <= 0:
